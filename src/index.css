@@ -1,0 +1,123 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+
+@theme {
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --color-primary-50: rgb(246, 248, 241);
+  --color-primary-100: rgb(234, 239, 224);
+  --color-primary-200: rgb(214, 223, 196);
+  --color-primary-300: rgb(184, 197, 154);
+  --color-primary-400: rgb(160, 174, 129);
+  --color-primary-500: rgb(139, 154, 110);
+  --color-primary-600: rgb(106, 120, 80);
+  --color-primary-700: rgb(88, 100, 66);
+  --color-primary-800: rgb(70, 80, 53);
+  --color-primary-900: rgb(52, 60, 40);
+
+  /* alias agar kode lama tetap jalan */
+  --color-primary: rgb(139, 154, 110);
+  --color-primary-dark: rgb(106, 120, 80);
+  --color-cream: rgb(247, 242, 235);
+  --color-sand: rgb(234, 226, 214);
+}
+
+html { scroll-behavior: smooth; }
+body { @apply bg-cream font-sans text-stone-800 antialiased; }
+:focus-visible { @apply outline-2 outline-offset-2 outline-primary-500; }
+::selection { @apply bg-primary-200; }
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+.animate-fade-up { animation: fade-up 0.3s ease both; }
+
+@layer components {
+  .page-title { @apply text-2xl font-semibold tracking-tight text-stone-900; }
+  .page-sub { @apply mt-1 text-sm text-stone-500; }
+
+  .card {
+    @apply rounded-2xl border border-sand bg-white p-5 shadow-[0_1px_2px_rgba(70,60,30,0.05)];
+  }
+  .label { @apply mb-1.5 block text-sm font-medium text-stone-700; }
+  .input {
+    @apply w-full rounded-xl border border-stone-200 bg-white px-3.5 py-2.5 text-sm outline-none
+           transition placeholder:text-stone-400 hover:border-stone-300
+           focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15
+           disabled:cursor-not-allowed disabled:bg-stone-50 disabled:text-stone-400;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5
+           text-sm font-medium text-white shadow-sm transition hover:bg-primary-700
+           active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-stone-200 bg-white
+           px-4 py-2.5 text-sm font-medium text-stone-700 transition hover:bg-stone-50
+           active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-red-200 bg-white
+           px-4 py-2.5 text-sm font-medium text-red-600 transition hover:bg-red-50
+           disabled:cursor-not-allowed disabled:opacity-60;
+  }
+  .btn-destructive {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-4 py-2.5
+           text-sm font-medium text-white shadow-sm transition hover:bg-red-700
+           disabled:cursor-not-allowed disabled:opacity-60;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-stone-200 bg-white px-3 py-1 text-sm
+           text-stone-600 transition hover:bg-stone-50;
+  }
+  .chip-active { @apply border-primary-600 bg-primary-600 text-white hover:bg-primary-700; }
+  .skeleton { @apply animate-pulse rounded-xl bg-sand/70; }
+}
+
+/* ===== Mode gelap ===== */
+.dark {
+  color-scheme: dark;
+  --color-cream: rgb(23, 21, 17);
+  --color-sand: rgb(58, 53, 44);
+
+  --color-stone-50: rgb(42, 39, 34);
+  --color-stone-100: rgb(49, 45, 39);
+  --color-stone-200: rgb(61, 56, 48);
+  --color-stone-300: rgb(74, 68, 59);
+  --color-stone-400: rgb(138, 131, 120);
+  --color-stone-500: rgb(163, 156, 144);
+  --color-stone-600: rgb(192, 185, 173);
+  --color-stone-700: rgb(214, 208, 197);
+  --color-stone-800: rgb(232, 227, 218);
+  --color-stone-900: rgb(245, 241, 234);
+
+  --color-primary-50: rgb(32, 38, 26);
+  --color-primary-100: rgb(43, 51, 34);
+  --color-primary-200: rgb(58, 69, 48);
+  --color-primary-300: rgb(85, 100, 69);
+  --color-primary-700: rgb(197, 209, 171);
+  --color-primary-800: rgb(214, 223, 196);
+  --color-primary-900: rgb(232, 238, 219);
+
+  --color-amber-50: rgb(43, 36, 22);
+  --color-amber-100: rgb(58, 47, 23);
+  --color-amber-700: rgb(240, 198, 116);
+  --color-red-50: rgb(45, 26, 26);
+}
+.dark [class*="bg-white"],
+.dark .card, .dark .input, .dark .btn-ghost, .dark .btn-danger,
+.dark .chip:not(.chip-active) { background-color: rgb(32, 29, 25); }
+.dark .bg-stone-900\/40 { background-color: rgba(0, 0, 0, 0.6); }
+
+@page { size: A4; margin: 14mm; }
+
+@media print {
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  header, nav, aside, .no-print { display: none !important; }
+  .app-shell { padding-left: 0 !important; }
+  body { background: #fff !important; }
+  .card { box-shadow: none; }
+}
