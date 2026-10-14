@@ -74,8 +74,8 @@ export default function Dashboard() {
         </Link>
       </div>
       {stats?.total === 0 && <GettingStarted />}
-      <UpcomingDeadlines />;
-      <PlanWidget onDone={() => fetchRecap("daily", today())} />;{/* Stats */}
+      <UpcomingDeadlines />
+      <PlanWidget onDone={() => fetchRecap("daily", today())} />{/* Stats */}
       {!stats ? (
         <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
           {[1, 2, 3, 4].map((i) => (
