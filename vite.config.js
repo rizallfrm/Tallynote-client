@@ -17,11 +17,11 @@ export default defineConfig({
         display: "standalone",
         background_color: "#f7f2eb",
         theme_color: "#6a7850",
-        icons: [
-          { src: "/pwa-192.png", sizes: "192x192", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png" },
-          { src: "/pwa-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
-        ],
+        // icons: [
+        //   { src: "/pwa-192.png", sizes: "192x192", type: "image/png" },
+        //   { src: "/pwa-512.png", sizes: "512x512", type: "image/png" },
+        //   { src: "/pwa-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
+        // ],
       },
     }),
   ],
