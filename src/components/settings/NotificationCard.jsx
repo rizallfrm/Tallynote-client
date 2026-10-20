@@ -121,7 +121,7 @@ export default function NotificationCard() {
             <MessageCircle size={16} /> WhatsApp
             {verified && (
               <span className="inline-flex items-center gap-1 rounded-full bg-primary-100 px-2 py-0.5 text-xs font-medium text-primary-800">
-                <BadgeCheck size={12} /> Terverifikasi
+                <BadgeCheck size={12} /> 
               </span>
             )}
             {pending && (
