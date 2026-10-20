@@ -4,6 +4,7 @@ import AuthShell from "../components/layout/AutoSHell";
 import GoogleButton from "../components/auth/GoogleButton";
 import { useAuth } from "../context/AuthContext";
 import { errMsg } from "../utils/format";
+import { postLoginPath } from "../utils/together";
 
 export default function Register() {
   const { user, register } = useAuth();
@@ -13,6 +14,7 @@ export default function Register() {
   const nav = useNavigate();
 
   if (user) return <Navigate to="/" replace />;
+  if (user) return <Navigate to={postLoginPath()} replace />;
 
   const submit = async (e) => {
     e.preventDefault();

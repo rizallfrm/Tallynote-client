@@ -4,6 +4,7 @@ import AuthShell from "../components/layout/AutoSHell";
 import GoogleButton from "../components/auth/GoogleButton";
 import { useAuth } from "../context/AuthContext";
 import { errMsg } from "../utils/format";
+import { postLoginPath } from "../utils/together";
 
 export default function Login() {
   const { user, login } = useAuth();
@@ -14,6 +15,7 @@ export default function Login() {
 
   if (user) return <Navigate to="/" replace />;
 
+  if (user) return <Navigate to={postLoginPath()} replace />;
   const submit = async (e) => {
     e.preventDefault();
     setBusy(true);
@@ -27,7 +29,7 @@ export default function Login() {
     } finally {
       setBusy(false);
     }
-  }
+  };
 
   return (
     <AuthShell
