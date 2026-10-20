@@ -7,6 +7,7 @@ import { errMsg } from "../utils/format";
 import { Link } from "react-router-dom";
 import BackupCard from "../components/settings/BackupCard";
 import NotificationCard from "../components/settings/NotificationCard";
+import CollabNotificationCard from "../components/settings/CollabNotificationCard";
 
 export default function Settings() {
   const { user, updateUser } = useAuth();
@@ -104,6 +105,7 @@ export default function Settings() {
       </form>
       <BackupCard />
       <NotificationCard />
+      <CollabNotificationCard />
       <form onSubmit={savePassword} className="card space-y-4">
         <h2 className="flex items-center gap-2 font-semibold">
           <KeyRound size={18} />{" "}
