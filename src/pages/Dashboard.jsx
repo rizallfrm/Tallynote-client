@@ -19,6 +19,8 @@ import TargetBar from "../components/summary/TargetBar";
 import PlanWidget from "../components/activity/PlanWidget";
 import UpcomingDeadlines from "../components/activity/UpcomingDeadlines";
 import GettingStarted from "../components/common/GettingStarted";
+import WorkspacesWidget from "../components/together/WorkspacesWidget";
+
 
 const COLORS = [
   "#8B9A6E",
@@ -129,6 +131,7 @@ export default function Dashboard() {
           targets.map((t) => <TargetBar key={t.id} t={t} />)
         )}
       </div>
+      <WorkspacesWidget /> 
       {/* Heatmap + kategori */}
       {stats && (
         <div className="grid gap-4 lg:grid-cols-3">

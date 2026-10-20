@@ -15,12 +15,18 @@ import Targets from "./pages/Targets";
 import Templates from "./pages/Template";
 import AskPage from "./pages/AskPage";
 import VerifyEmail from "./pages/VerifyEmail";
+import Workspaces from "./pages/Workspaces";
+import WorkspaceDetail from "./pages/WorkspaceDetail";
+import JoinWorkspace from "./pages/JoinWorkspace";
+
 export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/verify-email" element={<VerifyEmail />} />
       <Route path="/register" element={<Register />} />
+
+      <Route path="/join/:token" element={<JoinWorkspace />} />
       <Route element={<ProtectedRoute />}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
@@ -34,6 +40,8 @@ export default function App() {
           <Route path="/targets" element={<Targets />} />
           <Route path="/templates" element={<Templates />} />
           <Route path="/ask" element={<AskPage />} />
+          <Route path="/together" element={<Workspaces />} />
+          <Route path="/together/:wid" element={<WorkspaceDetail />} />
         </Route>
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
