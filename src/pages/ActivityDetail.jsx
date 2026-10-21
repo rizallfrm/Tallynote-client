@@ -11,6 +11,7 @@ import {
   Sparkles,
   Star,
   Trash2,
+  Users,
 } from "lucide-react";
 import api from "../api/axios";
 import { useActivity } from "../context/ActivityContext";
@@ -19,9 +20,17 @@ import ActivityForm from "../components/activity/ActivityForm";
 import StatusBadge from "../components/activity/StatusBadge";
 import CopyButton from "../components/common/CopyButton";
 import ConfirmDialog from "../components/common/ConfirmDialog";
-import { activityToText, errMsg, formatDate, today, formatDeadline } from "../utils/format";
+import {
+  activityToText,
+  errMsg,
+  formatDate,
+  today,
+  formatDeadline,
+} from "../utils/format";
 import DeadlineBadge from "../components/activity/DeadlineBadge";
 import { fromLocalInput } from "../utils/format";
+import LinkedNotes from "../components/activity/LinkedNotes";
+
 function Section({
   icon: Icon,
   title,
@@ -156,6 +165,38 @@ export default function ActivityDetail() {
       </div>
     );
 
+  const linked = !!(a.workspace_task_id || a.workspace_meeting_id);
+
+  if (editing && linked)
+    return (
+      <div className="mx-auto max-w-2xl space-y-4">
+        <button
+          className="inline-flex items-center gap-1 text-sm text-stone-500 hover:text-stone-800"
+          onClick={() => setEditing(false)}
+        >
+          <ArrowLeft size={16} /> Kembali ke detail
+        </button>
+        <h1 className="page-title">Catatan pribadi</h1>
+        <LinkedNotes
+          activity={a}
+          busy={saving}
+          onCancel={() => setEditing(false)}
+          onSave={async (f) => {
+            setSaving(true);
+            try {
+              setA(await updateActivity(id, f));
+              setEditing(false);
+              toast.success("Catatan disimpan");
+            } catch (e) {
+              toast.error(errMsg(e));
+            } finally {
+              setSaving(false);
+            }
+          }}
+        />
+      </div>
+    );
+
   if (editing)
     return (
       <div className="mx-auto max-w-2xl space-y-4">
@@ -184,7 +225,27 @@ export default function ActivityDetail() {
       >
         <ArrowLeft size={16} /> Riwayat aktivitas
       </Link>
-
+      {linked && (
+        <div className="card flex flex-wrap items-center gap-3 bg-primary-50">
+          <span className="rounded-lg bg-primary-100 p-2 text-primary-700">
+            <Users size={16} />
+          </span>
+          <p className="min-w-0 flex-1 text-sm text-stone-700">
+            Berasal dari ruang <b>{a.Workspace?.name || "Together"}</b>. Judul,
+            tanggal, status, dan deadline mengikuti{" "}
+            {a.workspace_task_id ? "tugas" : "meeting"} di ruang. Kamu bisa
+            menambah pembelajaran dan kendala pribadi.
+          </p>
+          {a.workspace_id && (
+            <Link
+              className="btn-ghost !py-1.5 text-sm"
+              to={`/together/${a.workspace_id}?tab=${a.workspace_task_id ? "tasks" : "meetings"}`}
+            >
+              Buka di ruang
+            </Link>
+          )}
+        </div>
+      )}
       <div className="card animate-fade-up">
         <div className="flex flex-wrap items-center gap-2 text-xs text-stone-500">
           <span>{formatDate(a.activity_date)}</span>
@@ -195,10 +256,21 @@ export default function ActivityDetail() {
           )}
           <StatusBadge status={a.status} />
           <DeadlineBadge activity={a} />
-          {a.ai_generated && (
-            <span className="flex items-center gap-1 text-primary-700">
-              <Sparkles size={12} /> Disusun AI
-            </span>
+          {a.ai_generated && a.activity_input && !linked && (
+            <button
+              className="btn-ghost"
+              onClick={() => setDialog("regenerate")}
+            >
+              <Sparkles size={16} /> Generate ulang
+            </button>
+          )}
+          {!linked && (
+            <button
+              className="btn-danger ml-auto"
+              onClick={() => setDialog("delete")}
+            >
+              <Trash2 size={16} /> Hapus
+            </button>
           )}
         </div>
         <div className="mt-3 flex items-start gap-2">

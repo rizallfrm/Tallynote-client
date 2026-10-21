@@ -26,7 +26,9 @@ const empty = {
   sort: "desc",
   tag: "",
   favorite: "",
+  source: "",
 };
+
 export default function ActivityList() {
   const { activities, pagination, categories, fetchActivities } = useActivity();
   const [sp] = useSearchParams();
@@ -54,7 +56,16 @@ export default function ActivityList() {
 
   useEffect(() => {
     const params = { page, limit: 10, sort: f.sort };
-    ["q", "status", "category_id", "start", "end"].forEach((k) => {
+    [
+      "q",
+      "status",
+      "category_id",
+      "start",
+      "end",
+      "tag",
+      "favorite",
+      "source",
+    ].forEach((k) => {
       if (f[k]) params[k] = f[k];
     });
     setLoading(true);
@@ -66,8 +77,14 @@ export default function ActivityList() {
     setPage(1);
   };
   const filtered =
-    f.q || f.status || f.category_id || f.start || f.end || f.tag || f.favorite;
-
+    f.q ||
+    f.status ||
+    f.category_id ||
+    f.start ||
+    f.end ||
+    f.tag ||
+    f.favorite ||
+    f.source;
   const reset = () => {
     setF(empty);
     setQ("");
@@ -154,6 +171,22 @@ export default function ActivityList() {
               onClick={() => change({ tag: f.tag === t.name ? "" : t.name })}
             >
               #{t.name} <span className="ml-1 opacity-60">{t.count}</span>
+            </button>
+          ))}
+        </div>
+
+        <div className="chip-row">
+          {[
+            ["", "Semua sumber"],
+            ["personal", "Pribadi"],
+            ["together", "Together"],
+          ].map(([k, l]) => (
+            <button
+              key={k}
+              className={`chip ${f.source === k ? "chip-active" : ""}`}
+              onClick={() => change({ source: k })}
+            >
+              {l}
             </button>
           ))}
         </div>
