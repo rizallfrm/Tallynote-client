@@ -30,7 +30,9 @@ const validDt = (iso) => {
 // jam deadline sesuai jam di perangkat user: "2026-10-12 17:00"
 const deadlineText = (iso) => {
   const d = validDt(iso);
-  return d ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}` : "";
+  return d
+    ? `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+    : "";
 };
 const excelDeadline = (iso) => {
   const d = validDt(iso);
@@ -39,6 +41,11 @@ const excelDeadline = (iso) => {
 
 const statusLabel = (s) => STATUS[s]?.label || "Berjalan";
 const tagsText = (a) => (a.Tags || []).map((t) => `#${t.name}`).join(" ");
+
+// asal data: aktivitas dari Together, hasil AI, atau diisi manual
+const sourceText = (a) =>
+  a.workspace_id ? `Together: ${a.Workspace?.name || "ruang"}` : a.ai_generated ? "AI" : "Manual";
+
 const sortRows = (rows) =>
   [...rows].sort((a, b) => String(a.activity_date).localeCompare(String(b.activity_date)) || a.id - b.id);
 
@@ -97,7 +104,7 @@ export function downloadCSV(rows, filename) {
       text(a.learning || ""),
       text(a.obstacle || ""),
       text(a.is_favorite ? "Ya" : ""),
-      text(a.ai_generated ? "AI" : "Manual"),
+      text(sourceText(a)),
     ].join(SEP)
   );
 
@@ -108,7 +115,7 @@ export function downloadCSV(rows, filename) {
 /* ================= Excel ================= */
 const C = {
   green: "FF6A7850", greenDark: "FF464F35", cream: "FFF7F2EB", white: "FFFFFFFF",
-  text: "FF2B2723", muted: "FF6B6459", line: "FFDDD3C1",
+  text: "FF2B2723", muted: "FF6B6459", line: "FFDDD3C1", gold: "FF8B6B2E",
 };
 const fill = (argb) => ({ type: "pattern", pattern: "solid", fgColor: { argb } });
 const cfFill = (argb) => ({ type: "pattern", pattern: "solid", bgColor: { argb } });
@@ -123,7 +130,7 @@ export async function downloadXLSX(rows, filename, meta = {}) {
   const mod = await import("exceljs");
   const ExcelJS = mod.default || mod;
   const wb = new ExcelJS.Workbook();
-  wb.creator = "Jurnal Harian";
+  wb.creator = "Tallynote";
   wb.created = new Date();
 
   const data = sortRows(rows);
@@ -149,7 +156,7 @@ export async function downloadXLSX(rows, filename, meta = {}) {
   const cols = [
     ["No", 5], ["Tanggal", 13], ["Hari", 10], ["Judul", 28], ["Kategori", 15], ["Tag", 16],
     ["Status ▼ (bisa diubah)", 18], ["Deadline", 18], ["Pantauan deadline (otomatis)", 24],
-    ["Uraian aktivitas", 50], ["Pembelajaran", 42], ["Kendala", 42], ["Favorit", 9], ["Sumber isi", 10],
+    ["Uraian aktivitas", 50], ["Pembelajaran", 42], ["Kendala", 42], ["Favorit", 9], ["Sumber isi", 22],
     ["Catatan saya (bebas diisi)", 30],
   ];
   ws2.columns = cols.map(([header, width]) => ({ header, width }));
@@ -157,9 +164,9 @@ export async function downloadXLSX(rows, filename, meta = {}) {
   const head = ws2.getRow(1);
   head.height = 34;
   head.eachCell((c, i) => {
-    const editable = i === 7 || i === 15;
+    const editable = i === 7 || i === 15; // kolom yang boleh diubah user berwarna emas
     c.font = { bold: true, color: { argb: C.white } };
-    c.fill = fill(editable ? "FF8B6B2E" : C.green); // kolom yang boleh diubah user berwarna emas
+    c.fill = fill(editable ? C.gold : C.green);
     c.alignment = { vertical: "middle", horizontal: "center", wrapText: true };
     c.border = BORDER;
   });
@@ -168,7 +175,6 @@ export async function downloadXLSX(rows, filename, meta = {}) {
     const r = i + 2;
     const row = ws2.getRow(r);
     const track = trackText(a);
-    const longHidden = [10, 11, 12, 15];
 
     row.values = [
       i + 1,
@@ -183,13 +189,17 @@ export async function downloadXLSX(rows, filename, meta = {}) {
         formula:
           `IF(G${r}="Selesai","✔ Selesai",IF(H${r}="","Tanpa deadline",` +
           `IF(H${r}<NOW(),"⚠ Terlambat",IF(H${r}-NOW()<1,"⏳ Kurang dari 1 hari","⏳ Sisa "&INT(H${r}-NOW())&" hari"))))`,
-        result: track === "Selesai" ? "✔ Selesai" : track === "Terlambat" ? "⚠ Terlambat" : track === "Tanpa deadline" ? track : `⏳ ${track}`,
+        result:
+          track === "Selesai" ? "✔ Selesai"
+          : track === "Terlambat" ? "⚠ Terlambat"
+          : track === "Tanpa deadline" ? track
+          : `⏳ ${track}`,
       },
       a.description || a.activity_input || "",
       a.learning || "",
       a.obstacle || "",
       a.is_favorite ? "★" : "",
-      a.ai_generated ? "AI" : "Manual",
+      sourceText(a),
       "",
     ];
 
@@ -201,7 +211,7 @@ export async function downloadXLSX(rows, filename, meta = {}) {
         wrapText: true,
         horizontal: [1, 2, 3, 7, 8, 9, 13, 14].includes(col) ? "center" : "left",
       };
-      if (i % 2 === 1 && !longHidden.includes(0)) c.fill = fill(C.cream);
+      if (i % 2 === 1) c.fill = fill(C.cream);
     });
     row.getCell(2).numFmt = "dd mmm yyyy";
     row.getCell(8).numFmt = "dd mmm yyyy hh:mm";
@@ -215,10 +225,11 @@ export async function downloadXLSX(rows, filename, meta = {}) {
     };
   });
 
-  // dropdown dan format juga berlaku untuk 50 baris kosong di bawah (jika user menambah baris sendiri)
+  // dropdown juga berlaku untuk 50 baris kosong di bawah (jika user menambah baris sendiri)
   for (let r = n + 2; r < n + 52; r++) {
-    const c = ws2.getCell(r, 7);
-    c.dataValidation = { type: "list", allowBlank: true, formulae: ['"Direncanakan,Berjalan,Selesai"'] };
+    ws2.getCell(r, 7).dataValidation = {
+      type: "list", allowBlank: true, formulae: ['"Direncanakan,Berjalan,Selesai"'],
+    };
   }
 
   const last = Math.max(n + 51, 60);
@@ -238,6 +249,13 @@ export async function downloadXLSX(rows, filename, meta = {}) {
       { type: "expression", formulae: ['ISNUMBER(SEARCH("Kurang",I2))'], style: { fill: cfFill("FFFBE9BE"), font: { bold: true, color: { argb: "FF7A4F00" } } } },
     ],
   });
+  // aktivitas dari Together diberi warna biru muda agar mudah dibedakan
+  ws2.addConditionalFormatting({
+    ref: `N2:N${last}`,
+    rules: [
+      { type: "expression", formulae: ['LEFT(N2,9)="Together:"'], style: { fill: cfFill("FFDDEBF7"), font: { bold: true, color: { argb: "FF1F4E79" } } } },
+    ],
+  });
 
   ws2.autoFilter = { from: { row: 1, column: 1 }, to: { row: 1, column: cols.length } };
   ws2.pageSetup = {
@@ -245,12 +263,12 @@ export async function downloadXLSX(rows, filename, meta = {}) {
     printTitlesRow: "1:1",
     margins: { left: 0.4, right: 0.4, top: 0.5, bottom: 0.6, header: 0.3, footer: 0.3 },
   };
-  ws2.headerFooter.oddFooter = "&LJurnal Harian&RHalaman &P dari &N";
+  ws2.headerFooter.oddFooter = "&LTallynote&RHalaman &P dari &N";
 
   /* =========================================================
      SHEET RINGKASAN (rumus terhubung ke sheet Jurnal)
      ========================================================= */
-  ws1.columns = [{ width: 30 }, { width: 18 }, { width: 18 }, { width: 22 }];
+  ws1.columns = [{ width: 36 }, { width: 18 }, { width: 18 }, { width: 22 }];
 
   ws1.mergeCells("A1:D1");
   const t = ws1.getCell("A1");
@@ -270,7 +288,11 @@ export async function downloadXLSX(rows, filename, meta = {}) {
   } catch { /* abaikan */ }
 
   let r = 3;
-  [["Nama", meta.name || "-"], ["Periode", meta.period || "-"], ["Dibuat", new Date().toLocaleString("id-ID")]].forEach(([k, v]) => {
+  [
+    ["Nama", meta.name || "-"],
+    ["Periode", meta.period || "-"],
+    ["Dibuat", new Date().toLocaleString("id-ID")],
+  ].forEach(([k, v]) => {
     ws1.getCell(r, 1).value = k;
     ws1.getCell(r, 1).font = { bold: true, color: { argb: C.muted } };
     ws1.mergeCells(r, 2, r, 4);
@@ -330,13 +352,28 @@ export async function downloadXLSX(rows, filename, meta = {}) {
   line("Direncanakan", { formula: `COUNTIF(${rng("G")},"Direncanakan")`, result: planned });
   line("Terlambat (lewat deadline, belum selesai)", { formula: `COUNTIF(${rng("I")},"*Terlambat*")`, result: late });
   const rRate = line("Tingkat selesai", { formula: `IF(B${rTotal}=0,0,B${rDone}/B${rTotal})`, result: rate }, "0%");
-  line(
-    "Progres",
-    {
-      formula: `REPT("█",ROUND(B${rRate}*10,0))&REPT("░",10-ROUND(B${rRate}*10,0))&" "&TEXT(B${rRate},"0%")`,
-      result: `${"█".repeat(Math.round(rate * 10))}${"░".repeat(10 - Math.round(rate * 10))} ${Math.round(rate * 100)}%`,
-    }
-  );
+  line("Progres", {
+    formula: `REPT("█",ROUND(B${rRate}*10,0))&REPT("░",10-ROUND(B${rRate}*10,0))&" "&TEXT(B${rRate},"0%")`,
+    result: `${"█".repeat(Math.round(rate * 10))}${"░".repeat(10 - Math.round(rate * 10))} ${Math.round(rate * 100)}%`,
+  });
+  r++;
+
+  // asal aktivitas (pribadi dan Together)
+  const together = data.filter((a) => a.workspace_id).length;
+  section("Asal aktivitas (otomatis)");
+  th(["Sumber", "Aktivitas", "Selesai", "Tingkat selesai"]);
+  [
+    ["Together (tugas dan meeting ruang)", `COUNTIF(${rng("N")},"Together:*")`, `COUNTIFS(${rng("N")},"Together:*",${rng("G")},"Selesai")`, together, data.filter((a) => a.workspace_id && a.status === "completed").length],
+    ["Pribadi (AI dan manual)", `B${r + 2}-B${r}`, `COUNTIF(${rng("G")},"Selesai")-C${r}`, n - together, done - data.filter((a) => a.workspace_id && a.status === "completed").length],
+  ].forEach(([label, fTotal, fDone, vTotal, vDone], k) => {
+    ws1.getCell(r, 1).value = label; ws1.getCell(r, 1).border = BORDER;
+    const c2 = ws1.getCell(r, 2); c2.value = { formula: fTotal, result: vTotal };
+    const c3 = ws1.getCell(r, 3); c3.value = { formula: fDone, result: vDone };
+    const c4 = ws1.getCell(r, 4); c4.value = { formula: `IF(B${r}=0,0,C${r}/B${r})`, result: vTotal ? vDone / vTotal : 0 }; c4.numFmt = "0%";
+    [c2, c3, c4].forEach((c) => { c.border = BORDER; c.alignment = { horizontal: "center" }; });
+    if (k === 0) r++;
+    else r++;
+  });
   r++;
 
   // per kategori
@@ -350,19 +387,21 @@ export async function downloadXLSX(rows, filename, meta = {}) {
   if (Object.keys(cat).length) {
     section("Per kategori (otomatis)");
     th(["Kategori", "Aktivitas", "Selesai", "Tingkat selesai"]);
-    Object.entries(cat).sort((x, y) => y[1].total - x[1].total).forEach(([nm, v]) => {
-      const c1 = ws1.getCell(r, 1);
-      c1.value = nm; c1.border = BORDER;
-      const c2 = ws1.getCell(r, 2);
-      c2.value = { formula: `COUNTIF(${rng("E")},A${r})`, result: v.total };
-      const c3 = ws1.getCell(r, 3);
-      c3.value = { formula: `COUNTIFS(${rng("E")},A${r},${rng("G")},"Selesai")`, result: v.done };
-      const c4 = ws1.getCell(r, 4);
-      c4.value = { formula: `IF(B${r}=0,0,C${r}/B${r})`, result: v.total ? v.done / v.total : 0 };
-      c4.numFmt = "0%";
-      [c2, c3, c4].forEach((c) => { c.border = BORDER; c.alignment = { horizontal: "center" }; });
-      r++;
-    });
+    Object.entries(cat)
+      .sort((x, y) => y[1].total - x[1].total)
+      .forEach(([nm, v]) => {
+        const c1 = ws1.getCell(r, 1);
+        c1.value = nm; c1.border = BORDER;
+        const c2 = ws1.getCell(r, 2);
+        c2.value = { formula: `COUNTIF(${rng("E")},A${r})`, result: v.total };
+        const c3 = ws1.getCell(r, 3);
+        c3.value = { formula: `COUNTIFS(${rng("E")},A${r},${rng("G")},"Selesai")`, result: v.done };
+        const c4 = ws1.getCell(r, 4);
+        c4.value = { formula: `IF(B${r}=0,0,C${r}/B${r})`, result: v.total ? v.done / v.total : 0 };
+        c4.numFmt = "0%";
+        [c2, c3, c4].forEach((c) => { c.border = BORDER; c.alignment = { horizontal: "center" }; });
+        r++;
+      });
     r++;
   }
 
@@ -396,18 +435,21 @@ export async function downloadXLSX(rows, filename, meta = {}) {
     ["h", "1. Memantau progres"],
     ["b", "Buka sheet “Jurnal”. Kolom bertanda emas (Status dan Catatan saya) boleh kamu ubah."],
     ["b", "Klik sel Status, lalu pilih Direncanakan, Berjalan, atau Selesai dari dropdown."],
-    ["b", "Sheet “Ringkasan” langsung ikut berubah: jumlah selesai, tingkat selesai, dan progres per kategori."],
+    ["b", "Sheet “Ringkasan” langsung ikut berubah: jumlah selesai, tingkat selesai, asal aktivitas, dan progres per kategori."],
     ["h", "2. Membaca kolom Pantauan deadline (otomatis)"],
     ["b", "✔ Selesai: status sudah Selesai."],
     ["b", "⏳ Sisa N hari atau Kurang dari 1 hari: deadline belum lewat."],
     ["b", "⚠ Terlambat: deadline lewat dan status belum Selesai (sel berwarna merah)."],
     ["b", "Kolom ini dihitung ulang setiap file dibuka, dihitung dari jam di komputermu."],
-    ["h", "3. Menyaring dan mengurutkan"],
-    ["b", "Klik tanda panah di judul kolom (Jurnal) untuk menyaring, misalnya hanya yang Terlambat atau satu kategori."],
-    ["h", "4. Hal yang jangan diubah"],
+    ["h", "3. Membaca kolom Sumber isi"],
+    ["b", "Together: nama ruang (sel biru) = tugas atau meeting dari Tallynote Together. Status aslinya diatur di aplikasi."],
+    ["b", "AI = disusun otomatis oleh AI. Manual = kamu isi sendiri."],
+    ["h", "4. Menyaring dan mengurutkan"],
+    ["b", "Klik tanda panah di judul kolom (Jurnal) untuk menyaring, misalnya hanya yang Terlambat, satu kategori, atau hanya Together."],
+    ["h", "5. Hal yang jangan diubah"],
     ["b", "Jangan mengganti nama sheet “Jurnal” dan jangan menghapus atau menyisipkan kolom, karena rumus Ringkasan membacanya."],
     ["b", "Boleh menambah baris baru tepat di bawah baris terakhir (sampai baris 2000). Angka Ringkasan akan ikut menghitungnya."],
-    ["h", "5. Catatan"],
+    ["h", "6. Catatan"],
     ["b", "Perubahan di Excel tidak tersimpan kembali ke aplikasi. File ini adalah salinan untuk dipantau dan dibagikan."],
     ["b", "Ingin memperbarui data dari aplikasi? Export ulang dari halaman Rekap."],
   ];
