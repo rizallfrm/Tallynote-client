@@ -16,7 +16,7 @@ const NAV = [
   ["Akun dan pengaturan", "/settings", ""],
 ];
 
-export default function CommandPalette({ open, onClose }) {
+export default function CommandPalette({ open, onClose }) {0
   const nav = useNavigate();
   const ref = useRef(null);
   const [q, setQ] = useState("");
