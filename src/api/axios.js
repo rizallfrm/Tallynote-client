@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const baseURL = (import.meta.env.VITE_API_URL || "http://localhost:5000/api").replace(/\/$/, "");
+const baseURL = (import.meta.env.VITE_API_URL || "https://tallynote-server-production-d76c.up.railway.app/api").replace(/\/$/, "");
 
 // peringatan saat dev memanggil server production (penyebab CORS di kasus ini)
 if (import.meta.env.DEV && !/localhost|127\.0\.0\.1/.test(baseURL)) {
